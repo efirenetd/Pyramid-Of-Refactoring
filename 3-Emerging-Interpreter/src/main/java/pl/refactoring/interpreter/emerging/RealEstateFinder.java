@@ -4,9 +4,7 @@
  */
 package pl.refactoring.interpreter.emerging;
 
-import pl.refactoring.interpreter.emerging.specs.AndSpec;
-import pl.refactoring.interpreter.emerging.specs.BelowAreaSpec;
-import pl.refactoring.interpreter.emerging.specs.MaterialSpec;
+import pl.refactoring.interpreter.emerging.specs.*;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -36,58 +34,25 @@ public class RealEstateFinder {
     }
 
     public List<RealEstate> byMaterialBelowArea(EstateMaterial material, float maxBuildingArea){
-        Spec materialSpec = new MaterialSpec(material);
-        Spec belowAreaSpec = new BelowAreaSpec(maxBuildingArea);
-
-        return bySpec(new AndSpec(materialSpec, belowAreaSpec));
+        return bySpec(new AndSpec(new MaterialSpec(material), new BelowAreaSpec(maxBuildingArea)));
     }
 
     public List<RealEstate> byPlacement(EstatePlacement placement){
-        List<RealEstate> foundRealEstates = new ArrayList<>();
-
-        Iterator<RealEstate> estates = repository.iterator();
-        while (estates.hasNext()) {
-            RealEstate estate = estates.next();
-            if (estate.getPlacement().equals(placement))
-                foundRealEstates.add(estate);
-        }
-        return foundRealEstates;
+        return bySpec(new PlacementSpec(placement));
     }
 
     public List<RealEstate> byAvoidingPlacement(EstatePlacement placement){
-        List<RealEstate> foundRealEstates = new ArrayList<>();
-
-        Iterator<RealEstate> estates = repository.iterator();
-        while (estates.hasNext()) {
-            RealEstate estate = estates.next();
-            if (! estate.getPlacement().equals(placement))
-                foundRealEstates.add(estate);
-        }
-        return foundRealEstates;
+        Spec spec = new PlacementSpec(placement);
+        Spec notSpec = new NotSpec(spec);
+        return bySpec(notSpec);
     }
 
     public List<RealEstate> byAreaRange(float minArea, float maxArea){
-        List<RealEstate> foundRealEstates = new ArrayList<>();
-
-        Iterator<RealEstate> estates = repository.iterator();
-        while (estates.hasNext()) {
-            RealEstate estate = estates.next();
-            if (estate.getBuildingArea() >= minArea && estate.getBuildingArea() <= maxArea)
-                foundRealEstates.add(estate);
-        }
-        return foundRealEstates;
+        return bySpec(new RangeAreaSpec(minArea, maxArea));
     }
 
     public List<RealEstate> byType(EstateType type){
-        List<RealEstate> foundRealEstates = new ArrayList<>();
-
-        Iterator<RealEstate> estates = repository.iterator();
-        while (estates.hasNext()) {
-            RealEstate estate = estates.next();
-            if (estate.getType().equals(type))
-                foundRealEstates.add(estate);
-        }
-        return foundRealEstates;
+        return bySpec(new TypeSpec(type));
     }
 
     public List<RealEstate> byVerySpecificCriteria(EstateType type, EstatePlacement placement, EstateMaterial material){
@@ -96,9 +61,10 @@ public class RealEstateFinder {
         Iterator<RealEstate> estates = repository.iterator();
         while (estates.hasNext()) {
             RealEstate estate = estates.next();
-            if (estate.getType().equals(type) && estate.getPlacement().equals(placement) && estate.getMaterial().equals(material))
+            if (new TypeSpec(type).isSatisfiedBy(estate) && new PlacementSpec(placement).isSatisfiedBy(estate) && estate.getMaterial().equals(material))
                 foundRealEstates.add(estate);
         }
         return foundRealEstates;
     }
+
 }
