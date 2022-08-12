@@ -4,6 +4,14 @@
  */
 package pl.refactoring.interpreter.completed;
 
-public interface Spec {
+import java.util.function.Predicate;
+
+@FunctionalInterface
+public interface Spec extends Predicate<RealEstate> {
     boolean isSatisfiedBy(RealEstate estate);
+
+    @Override
+    default boolean test(RealEstate estate) {
+        return isSatisfiedBy(estate);
+    }
 }
